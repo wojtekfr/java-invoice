@@ -21,7 +21,18 @@ public class Invoice {
 		if (product == null || quantity <= 0) {
 			throw new IllegalArgumentException();
 		}
-		products.put(product, quantity);
+		boolean productAreadyExists = false;
+		for (Product existingProduct : products.keySet()) {
+			if (existingProduct.getName().equals(product.getName()) &&
+					existingProduct.getPrice().equals(product.getPrice())) {
+				productAreadyExists = true;
+				products.put(existingProduct, products.get(existingProduct) + quantity);
+			}
+		}
+
+		if (!productAreadyExists)
+			products.put(product, quantity);
+
 	}
 
 	public BigDecimal getNetTotal() {
@@ -55,7 +66,7 @@ public class Invoice {
 		List<String> printOut = new ArrayList<>();
 		printOut.add(String.valueOf(this.getNumber()));
 		for (Product product : products.keySet()) {
-			printOut.add(product.getName() + "," + String.valueOf(products.get(product)) +","
+			printOut.add(product.getName() + "," + String.valueOf(products.get(product)) + ","
 					+ String.valueOf(product.getPrice().multiply(new BigDecimal(products.get(product)))));
 		}
 

@@ -186,20 +186,55 @@ public class InvoiceTest {
 		int i = 1;
 		for (Product product : invoice.getProducts().keySet()) {
 			String[] currentLineSplit = invoice.preparePrintOut().get(i).split(",");
-			
-			
-			
-			// Czy dwa bigdecimale można porównywac przez assertEquals ? Wcześniej używałeś assertThat i spróbowałem
-			// i tak też działa. Ale nie rozumiem tej konstrukcji. Więc zostawiam ją wykomentowaną, 
-			// skoro przez assertEquals wydaje się działac. 
-			//Assert.assertThat(product.getPrice().multiply(new BigDecimal(invoice.getProducts().get(product))),
-			//		Matchers.comparesEqualTo(new BigDecimal(currentLineSplit[2])));
-			
+
+			// Czy dwa bigdecimale można porównywac przez assertEquals ? Wcześniej używałeś
+			// assertThat i spróbowałem
+			// i tak też działa. Ale nie rozumiem tej konstrukcji. Więc zostawiam ją
+			// wykomentowaną,
+			// skoro przez assertEquals wydaje się działac.
+			// Assert.assertThat(product.getPrice().multiply(new
+			// BigDecimal(invoice.getProducts().get(product))),
+			// Matchers.comparesEqualTo(new BigDecimal(currentLineSplit[2])));
+
 			Assert.assertEquals(product.getPrice().multiply(new BigDecimal(invoice.getProducts().get(product))),
 					new BigDecimal(currentLineSplit[2]));
 			i++;
 		}
-
 	}
 
+	@Test
+	public void testAddingSecondProductWithSameNameAndPriceDoesNotCreatesNewEntry() {
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 2);
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+		Assert.assertEquals(invoice.getProducts().size(), 1);
+	}
+
+	@Test
+	public void testAddingSecondProductWithSameNameButDifferentPriceCreatesNewEntry() {
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 2);
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("20")), 3);
+		Assert.assertEquals(invoice.getProducts().size(), 2);
+	}
+
+	@Test
+	public void testAddingSecondProductWithDifNameButSamePriceDoesNotCreateNewEntry() {
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("20")), 2);
+		invoice.addProduct(new DairyProduct("Kozii Serek", new BigDecimal("20")), 3);
+		Assert.assertEquals(invoice.getProducts().size(), 2);
+	}
+
+	
+	@Test
+	public void testAddingSecondProductUpdatesQuantity() {
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 2);
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+		Product lookedProduct = null;;
+		for(Product product: invoice.getProducts().keySet()) {
+			if (product.getName().equals("Kozi Serek")) {
+				lookedProduct = product;
+				break;
+			}
+		}
+		Assert.assertEquals(5,(int)invoice.getProducts().get(lookedProduct));
+	}
 }
