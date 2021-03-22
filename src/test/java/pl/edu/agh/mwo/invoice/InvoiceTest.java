@@ -1,6 +1,7 @@
 package pl.edu.agh.mwo.invoice;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -122,4 +123,83 @@ public class InvoiceTest {
 	public void testTheSameInvoiceHasTheSameNumber() {
 		Assert.assertEquals(invoice.getNumber(), invoice.getNumber());
 	}
+
+	@Test
+	public void testPrintOutIsNotNull() {
+		Assert.assertNotEquals(null, invoice.preparePrintOut());
+	}
+
+	@Test
+	public void testFirstLineContainsInvoiceNumber() {
+		Assert.assertEquals(String.valueOf(invoice.getNumber()), invoice.preparePrintOut().get(0));
+	}
+
+	@Test
+	public void testLastLineContainsNumberOfProducts() {
+		invoice.addProduct(new TaxFreeProduct("Owoce", new BigDecimal("200")));
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+		String lastLine = invoice.preparePrintOut().get(invoice.preparePrintOut().size() - 1);
+		String[] lastLineSplit = lastLine.split(":");
+		int numberOfProducts = Integer.valueOf(lastLineSplit[1].trim());
+		Assert.assertEquals(invoice.getProducts().size(), numberOfProducts);
+	}
+
+	@Test
+	public void testNumberOfLinesIsCorrect() {
+		invoice.addProduct(new TaxFreeProduct("Owoce", new BigDecimal("200")));
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+		Assert.assertEquals(4, invoice.preparePrintOut().size());
+	}
+
+	@Test
+	public void testEachLineContainsProductName() {
+		invoice.addProduct(new TaxFreeProduct("Owoce", new BigDecimal("200")));
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+
+		int i = 1;
+		for (Product product : invoice.getProducts().keySet()) {
+			String[] currentLineSplit = invoice.preparePrintOut().get(i).split(",");
+			Assert.assertEquals(product.getName(), currentLineSplit[0]);
+			i++;
+		}
+	}
+
+	@Test
+	public void testEachLineContainsProductQuantity() {
+		invoice.addProduct(new TaxFreeProduct("Owoce", new BigDecimal("200")));
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+
+		int i = 1;
+		for (Product product : invoice.getProducts().keySet()) {
+			String[] currentLineSplit = invoice.preparePrintOut().get(i).split(",");
+			Assert.assertEquals(invoice.getProducts().get(product), Integer.valueOf(currentLineSplit[1]));
+			i++;
+		}
+	}
+
+	@Test
+	public void testEachLineContainsProductPrice() {
+		invoice.addProduct(new TaxFreeProduct("Owoce", new BigDecimal("200")));
+		invoice.addProduct(new DairyProduct("Kozi Serek", new BigDecimal("10")), 3);
+		invoice.addProduct(new OtherProduct("Pinezka", new BigDecimal("0.01")), 1000);
+
+		int i = 1;
+		for (Product product : invoice.getProducts().keySet()) {
+			String[] currentLineSplit = invoice.preparePrintOut().get(i).split(",");
+			
+			
+			
+			// Czy dwa bigdecimale można porównywac przez assertEquals ? Wcześniej używałeś assertThat i spróbowałem
+			// i tak też działa. Ale nie rozumiem tej konstrukcji. Więc zostawiam ją wykomentowaną, 
+			// skoro przez assertEquals wydaje się działac. 
+			//Assert.assertThat(product.getPrice().multiply(new BigDecimal(invoice.getProducts().get(product))),
+			//		Matchers.comparesEqualTo(new BigDecimal(currentLineSplit[2])));
+			
+			Assert.assertEquals(product.getPrice().multiply(new BigDecimal(invoice.getProducts().get(product))),
+					new BigDecimal(currentLineSplit[2]));
+			i++;
+		}
+
+	}
+
 }
